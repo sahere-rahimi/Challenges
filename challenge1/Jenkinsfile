@@ -1,0 +1,30 @@
+pipeline {
+   agent any
+   
+   stages {
+      stage('Build') {
+         steps {
+            sh 'docker build -t mywordpress .'
+         }
+      }
+      
+      stage('Push') {
+         steps {
+            withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+               sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+            }
+            sh 'docker tag mywordpress DOCKER_USERNAME/mywordpress:latest'
+            sh 'docker push DOCKER_USERNAME/mywordpress:latest'
+         }
+      }
+      
+      stage('Deploy') {
+         steps {
+            withCredentials([usernamePassword(credentialsId: 'webserver_login', usernameVariable: 'USERNAME', passwordVariable: 'USERPASS')]) {
+               script {
+                  sh 'sshpass -p '$USERPASS' ssh $USERNAME@$prod_ip "docker stop mywordpress || true && docker rm mywordpress || true && docker pull DOCKER_USERNAME/mywordpress:latest && docker run -d --name mywordpress -p 80:80 DOCKER_USERNAME/mywordpress:latest"'
+            }
+         }
+      }
+   }
+}

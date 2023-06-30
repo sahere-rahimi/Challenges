@@ -4,7 +4,7 @@ Install the chart using the following command:
 <br>
 git clone <THE_PROJECT_URL>
 <br>
-cd <THE_PROJECT> 
+cd Challenges/challenge2/
 <br>
 helm install challenge2 .
 <br>
